@@ -1,0 +1,6 @@
+{
+  "client_name": "ASTRA01",
+  "address": "192.168.1.1:80",
+  "use_tls": false,
+  "key": ""
+}
