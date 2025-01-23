@@ -1,0 +1,3 @@
+package database
+
+// SQL queries to users, tokens, ...
