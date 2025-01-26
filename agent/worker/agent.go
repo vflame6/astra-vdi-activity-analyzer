@@ -9,9 +9,11 @@ type Agent struct {
 	Config    utils.Config
 	ServerURL string
 	w         *Worker
+	noSender  bool
 }
 
-func Ping(url string) error {
+func Ping(serverURL string) error {
+	url := serverURL + "/api/ping"
 	err := http.SendPingRequest(url)
 	if err != nil {
 		return err
@@ -19,7 +21,8 @@ func Ping(url string) error {
 	return nil
 }
 
-func Register(url, hostname, password string) (string, error) {
+func Register(serverURL, hostname, password string) (string, error) {
+	url := serverURL + "/api/register"
 	key, err := http.SendRegisterRequest(url, hostname, password)
 	if err != nil {
 		return "", err
@@ -27,17 +30,22 @@ func Register(url, hostname, password string) (string, error) {
 	return key, nil
 }
 
-func NewAgent(config *utils.Config, serverURL string) Agent {
+func NewAgent(config *utils.Config, serverURL string, noSender bool) Agent {
 	worker := NewWorker()
 	return Agent{
 		Config:    *config,
 		ServerURL: serverURL,
 		w:         worker,
+		noSender:  noSender,
 	}
 }
 
 func (a *Agent) Start() {
-	a.w.RunScreenshoter(a.ServerURL, a.Config.ClientName, a.Config.Key)
+	if a.noSender {
+		a.w.RunOfflineScreenshoter(a.Config.ClientName)
+	} else {
+		a.w.RunOnlineScreenshoter(a.ServerURL, a.Config.ClientName, a.Config.Key)
+	}
 }
 
 func (a *Agent) Stop() {
@@ -45,7 +53,8 @@ func (a *Agent) Stop() {
 }
 
 func (a *Agent) HealthCheck() error {
-	err := http.SendHealthCheckRequest(a.Config.Address, a.Config.ClientName, a.Config.Key)
+	url := a.ServerURL + "/api/health"
+	err := http.SendHealthCheckRequest(url, a.Config.ClientName, a.Config.Key)
 	if err != nil {
 		return err
 	}

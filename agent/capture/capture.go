@@ -9,6 +9,10 @@ import (
 )
 
 func CaptureScreen(hostname string) []string {
+	if _, err := os.Stat("data"); os.IsNotExist(err) {
+		_ = os.Mkdir("data", 0755)
+	}
+
 	n := screenshot.NumActiveDisplays()
 	var filenames []string
 
@@ -20,7 +24,7 @@ func CaptureScreen(hostname string) []string {
 			panic(err)
 		}
 
-		currentTimestamp := time.Now().Format("2006-01-02-15-04-05")
+		currentTimestamp := time.Now().Format("2006-01-02_15-04-05")
 		fileName := fmt.Sprintf("data/%s_%s_%dx%d.png", hostname, currentTimestamp, bounds.Dx(), bounds.Dy())
 		file, _ := os.Create(fileName)
 		defer file.Close()

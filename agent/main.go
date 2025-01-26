@@ -13,6 +13,7 @@ import (
 
 var (
 	register = kingpin.Flag("register", "Register the agent").Short('r').Bool()
+	noSender = kingpin.Flag("offline", "Offline mode. This will just make screenshots and save them to data/ directory.").Bool()
 )
 
 func main() {
@@ -21,18 +22,16 @@ func main() {
 	kingpin.CommandLine.HelpFlag.Short('h')
 	kingpin.Parse()
 
+	if *register && *noSender {
+		log.Fatal("You can't set --register and --offline at the same time.")
+	}
+
 	conf, err := utils.LoadConfig("./config.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	serverURL := http.GetURL(conf.Address, conf.UseTLS)
-
-	log.Println("Checking storage server availability")
-	err = worker.Ping(serverURL)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	if *register {
 		log.Println("Registering agent")
@@ -64,15 +63,26 @@ func main() {
 		os.Exit(0)
 	}
 
-	if conf.Key == "" {
+	if conf.Key == "" && !*noSender {
 		log.Fatal("The agent is not registered. Try again with --register.")
 	}
-	log.Println("Starting agent")
-	agent := worker.NewAgent(conf, serverURL)
-	log.Println("Checking agent authenticity")
-	err = agent.HealthCheck()
-	if err != nil {
-		log.Fatal(err)
+
+	agent := worker.NewAgent(conf, serverURL, *noSender)
+
+	if !*noSender {
+		log.Println("Starting agent in online mode")
+		log.Println("Checking storage server availability")
+		err = worker.Ping(serverURL)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Checking agent authenticity")
+		err = agent.HealthCheck()
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Println("Starting agent in offline mode")
 	}
 	go agent.Start()
 
@@ -80,7 +90,7 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
-	log.Println("CTRL+C received... Gracefully shutting down the server")
+	log.Println("CTRL+C received... Gracefully shutting down the agent")
 	agent.Stop()
 	os.Exit(0)
 }

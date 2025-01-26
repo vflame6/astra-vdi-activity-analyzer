@@ -22,7 +22,9 @@ func NewWorker() *Worker {
 	return w
 }
 
-func (w *Worker) RunScreenshoter(url, hostname, secret string) {
+func (w *Worker) RunOnlineScreenshoter(serverURL, hostname, secret string) {
+	url := serverURL + "/api/screenshot/" + hostname
+
 	go func() {
 		for {
 			select {
@@ -39,6 +41,24 @@ func (w *Worker) RunScreenshoter(url, hostname, secret string) {
 					if err != nil {
 						log.Printf("Failed to delete screenshot: %v\n", err)
 					}
+				}
+				time.Sleep(5 * time.Second)
+			}
+			runtime.Gosched()
+		}
+	}()
+}
+
+func (w *Worker) RunOfflineScreenshoter(hostname string) {
+	go func() {
+		for {
+			select {
+			case <-*w.stop:
+				return
+			default:
+				filenames := capture.CaptureScreen(hostname)
+				for _, filename := range filenames {
+					log.Println("Got a screenshot: " + filename)
 				}
 				time.Sleep(5 * time.Second)
 			}
