@@ -1,3 +1,8 @@
 package database
 
-// Users, tokens, statuses, ...
+import "gorm.io/gorm"
+
+type Host struct {
+	gorm.Model
+	Hostname string `gorm:"unique"`
+}
