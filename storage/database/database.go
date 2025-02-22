@@ -24,3 +24,20 @@ func Init() *gorm.DB {
 func Migrate(db *gorm.DB) {
 	db.AutoMigrate(&Host{})
 }
+
+func CreateHost(hostname, secret string) error {
+	host := &Host{
+		Hostname: hostname,
+		Secret:   secret,
+	}
+	return DB.Create(host).Error
+}
+
+func SelectHost(hostname string) (*Host, error) {
+	var host Host
+	err := DB.First(&host, "hostname = ?", hostname).Error
+	if err != nil {
+		return nil, err
+	}
+	return &host, nil
+}

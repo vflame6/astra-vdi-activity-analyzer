@@ -6,10 +6,9 @@ import (
 )
 
 type Config struct {
-	ClientName string `json:"client_name"`
-	Address    string `json:"address"`
-	UseTLS     bool   `json:"use_tls"`
-	Key        string `json:"key"`
+	Processing        bool   `json:"processing"`
+	ProcessingAddress string `json:"processing_address"`
+	Password          string `json:"password"`
 }
 
 func LoadConfig(filepath string) (*Config, error) {

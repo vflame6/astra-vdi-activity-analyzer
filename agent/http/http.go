@@ -13,7 +13,6 @@ import (
 
 const (
 	// DefaultTimeoutSeconds is the number of seconds before a timeout occurs
-	// when sending a webhook
 	DefaultTimeoutSeconds = 10
 )
 
